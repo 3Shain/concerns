@@ -1,0 +1,41 @@
+{
+  "name": "concerns",
+  "description": "That you should separate",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "3Shain",
+    "email": "san3shain@outlook.com"
+  },
+  "type": "module",
+  "main": "./dist/concerns.cjs",
+  "module": "./dist/concerns.js",
+  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/concerns.cjs",
+      "import": "./dist/concerns.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "vite build && pnpm run emit-type",
+    "test": "vitest",
+    "emit-type": "tsc && cp ./src/provide.d.ts ./dist/provide.d.ts"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^0.34.6",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.2",
+    "vitest": "^0.34.6"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "multishot-generator": "^1.1.2"
+  }
+}
