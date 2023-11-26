@@ -4,7 +4,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./src/index.ts",
-      name: "concerns",
+      fileName: "index",
       formats: ["es", "cjs"],
     },
     minify: false,

@@ -1,20 +1,24 @@
 {
   "name": "concerns",
   "description": "That you should separate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": {
     "name": "3Shain",
     "email": "san3shain@outlook.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/3Shain/concerns"
+  },
   "type": "module",
-  "main": "./dist/concerns.cjs",
-  "module": "./dist/concerns.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/concerns.cjs",
-      "import": "./dist/concerns.js",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
