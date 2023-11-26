@@ -1,5 +1,6 @@
 interface Concerns {
   // leave it empty
+  __module__: { get: (concern: keyof Concerns) => Concerns[typeof concern] };
 }
 
 type DetailOf<T, TDeps> = Generator<TDeps, T, any>;
