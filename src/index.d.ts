@@ -1,6 +1,47 @@
-import type { AllConcerns, Concerns } from "./concerns";
-import type { BuiltinEffects } from "./effects";
-import type { Implementation, Instance } from "./impl";
+import type { MultishotGenerator } from "multishot-generator";
+
+interface Concerns {
+  __module__: {
+    get: (concern: keyof Concerns) => Concerns[typeof concern];
+  };
+}
+type DetailOf<T, TDeps> = Generator<TDeps, T, any>;
+type AllConcerns = keyof Concerns;
+declare function use<TConcern extends AllConcerns>(
+  concern: TConcern
+): DetailOf<Concerns[TConcern], TConcern>;
+export type Implementation<
+  TConcern extends AllConcerns,
+  TDeps extends AllConcerns | BuiltinEffects
+> = {
+  concern: TConcern;
+  instantiate: (context: {
+    [key in Exclude<TDeps, BuiltinEffects>]: Concerns[key];
+  }) => MultishotGenerator<TDeps, Concerns[TConcern], any>;
+};
+export declare function addInterceptor<A, B, C>(
+  interceptor: (
+    normal: (value: C) => MultishotGenerator<A, B, C>
+  ) => (value: C) => MultishotGenerator<A, B, C>
+): () => any[];
+export declare function impl<TConcern extends AllConcerns>(
+  concern: TConcern
+): <TDeps extends AllConcerns | BuiltinEffects>(
+  factory: (
+    _: typeof Yield<Concerns[TConcern]>
+  ) => DetailOf<Concerns[TConcern], TDeps>
+) => Implementation<TConcern, TDeps>;
+export interface Instance<T> {
+  instance: T;
+  dispose: () => void;
+}
+export declare function Await<T>(promise: Promise<T>): DetailOf<T, "(await)">;
+export declare function Yield<T>(value: T): DetailOf<void, "(yield)">;
+export type Subscription = () => () => void;
+export declare function Subscribe(
+  subscription: Subscription
+): DetailOf<void, "(subscribe)">;
+export type BuiltinEffects = "(await)" | "(yield)" | "(subscribe)";
 
 export interface ModuleRegistry<TConcerns extends AllConcerns> {
   get<T extends TConcerns>(concern: T): Concerns[TConcerns];
@@ -105,3 +146,20 @@ export class ModuleConstructor<
     ? Instance<AsyncGenerator<ModuleRegistry<TConcerns>, void>>
     : never;
 }
+
+export interface Logger {
+  log: (...args: any[]) => void;
+  info: (...args: any[]) => void;
+  warn: (...args: any[]) => void;
+  error: (...args: any[]) => void;
+}
+interface Concerns {
+  logger: Logger;
+}
+export declare const implementLogger: <
+  TDeps extends keyof Concerns | BuiltinEffects
+>(
+  factory: (
+    _: (value: Logger) => DetailOf<void, "(yield)">
+  ) => DetailOf<Logger, TDeps>
+) => Implementation<"logger", TDeps>;

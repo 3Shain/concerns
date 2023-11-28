@@ -1,21 +1,15 @@
 import { describe, expect, test } from "vitest";
 import {
   impl,
-  construct,
-  constructAsync,
-  constructStream,
-  constructAsyncStream,
   use,
   addInterceptor,
-} from "./index";
-import { Await, Subscribe } from "./effects";
-import {
+  Await,
+  Subscribe,
   ImplementationConstructor,
   ModuleConstructor,
-  provide,
-} from "./provide";
+} from "./index";
 
-declare module "./concerns" {
+declare module "./index" {
   interface Concerns {
     a: number;
     b: number;
@@ -65,34 +59,35 @@ const BStream = implb(function* (Yield) {
 });
 
 describe("concerns", () => {
-  test("1", () => {
-    expect(construct(A0).instance).toBe(0);
-  });
+  // test("1", () => {
+  //   expect(construct(A0).instance).toBe(0);
+  // });
 
-  test("2", async () => {
-    expect(await constructAsync(A0Async).instance).toBe(0);
-  });
+  // test("2", async () => {
+  //   expect(await constructAsync(A0Async).instance).toBe(0);
+  // });
 
-  test("3", () => {
-    expect([...constructStream(A0Stream).instance]).toStrictEqual([
-      4, 3, 2, 1, 0,
-    ]);
-  });
+  // test("3", () => {
+  //   expect([...constructStream(A0Stream).instance]).toStrictEqual([
+  //     4, 3, 2, 1, 0,
+  //   ]);
+  // });
 
-  test("4", async () => {
-    expect(
-      await fromAsync(constructAsyncStream(A0AsyncStream).instance)
-    ).toStrictEqual([4, 3, 2, 1, 0]);
-  });
+  // test("4", async () => {
+  //   expect(
+  //     await fromAsync(constructAsyncStream(A0AsyncStream).instance)
+  //   ).toStrictEqual([4, 3, 2, 1, 0]);
+  // });
 
   test("5. unsolved dependency", async () => {
-    // @ts-expect-error
-    expect(() => construct(B)).toThrow("Unhandled effects");
+    expect(() => new ImplementationConstructor(B).construct()).toThrow(
+      "Unhandled effects"
+    );
   });
 
-  test("6. dependency", async () => {
-    expect(construct(provide(B, A0)).instance).toBe(1);
-  });
+  // test("6. dependency", async () => {
+  //   expect(construct(provide(B, A0)).instance).toBe(1);
+  // });
 
   test("6.1. dependency by constructor", async () => {
     expect(
@@ -100,9 +95,9 @@ describe("concerns", () => {
     ).toBe(1);
   });
 
-  test("7. async dep", async () => {
-    expect(await constructAsync(provide(B, A0Async)).instance).toBe(1);
-  });
+  // test("7. async dep", async () => {
+  //   expect(await constructAsync(provide(B, A0Async)).instance).toBe(1);
+  // });
 
   test("7. async dep by constructor", async () => {
     expect(
@@ -111,11 +106,11 @@ describe("concerns", () => {
     ).toBe(1);
   });
 
-  test("8. stream deps", async () => {
-    expect([...constructStream(provide(B, A0Stream)).instance]).toStrictEqual([
-      5, 4, 3, 2, 1,
-    ]);
-  });
+  // test("8. stream deps", async () => {
+  //   expect([...constructStream(provide(B, A0Stream)).instance]).toStrictEqual([
+  //     5, 4, 3, 2, 1,
+  //   ]);
+  // });
 
   test("8. stream deps by constructor", async () => {
     expect([
@@ -126,7 +121,9 @@ describe("concerns", () => {
 
   test("9. stream over stream", async () => {
     expect([
-      ...constructStream(provide(BStream, A0Stream)).instance,
+      ...new ImplementationConstructor(BStream)
+        .provide(A0Stream)
+        .constructStream().instance,
     ]).toStrictEqual([
       6,
       5, //
@@ -198,7 +195,9 @@ describe("concerns", () => {
 
     expect(sideEffect).toBe(0);
 
-    const { dispose, instance } = constructAsyncStream(A0Intercepted);
+    const { dispose, instance } = new ImplementationConstructor(
+      A0Intercepted
+    ).constructAsyncStream();
     await fromAsync(instance);
     expect(innerSubscribe).toBeTruthy();
     expect(sideEffect).toBe(1);
@@ -207,7 +206,7 @@ describe("concerns", () => {
     expect(sideEffect).toBe(2);
     rm();
 
-    const { dispose: dispose2 } = construct(A0);
+    const { dispose: dispose2 } = new ImplementationConstructor(A0).construct();
 
     expect(sideEffect).toBe(2);
     dispose2();
@@ -224,31 +223,38 @@ describe("concerns", () => {
     expect(registry.get("a")).toBe(0);
   });
 
-
   test("7. provideDybamic & provideConstant", async () => {
     expect(
-      await fromAsync(new ImplementationConstructor(B).provideDynamic("a", function*() {
-        const c = yield* use("c");
-        if(c > 0) {
-          return A0Async;
-        } else {
-          return A0Stream;
-        }
-      }).provideConstant("c", 1).constructAsyncStream()
-        .instance)
+      await fromAsync(
+        new ImplementationConstructor(B)
+          .provideDynamic("a", function* () {
+            const c = yield* use("c");
+            if (c > 0) {
+              return A0Async;
+            } else {
+              return A0Stream;
+            }
+          })
+          .provideConstant("c", 1)
+          .constructAsyncStream().instance
+      )
     ).toStrictEqual([1]);
 
     expect(
-      await fromAsync(new ImplementationConstructor(B).provideDynamic("a", function*() {
-        const c = yield* use("c");
-        if(c > 0) {
-          return A0Async;
-        } else {
-          return A0Stream;
-        }
-      }).provideConstant("c", -1).constructAsyncStream()
-        .instance)
-    ).toStrictEqual([5,4,3,2,1]);
+      await fromAsync(
+        new ImplementationConstructor(B)
+          .provideDynamic("a", function* () {
+            const c = yield* use("c");
+            if (c > 0) {
+              return A0Async;
+            } else {
+              return A0Stream;
+            }
+          })
+          .provideConstant("c", -1)
+          .constructAsyncStream().instance
+      )
+    ).toStrictEqual([5, 4, 3, 2, 1]);
   });
 });
 
