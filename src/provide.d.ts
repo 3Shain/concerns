@@ -2,16 +2,6 @@ import type { AllConcerns, Concerns } from "./concerns";
 import type { BuiltinEffects } from "./effects";
 import type { Implementation, Instance } from "./impl";
 
-export function provide<
-  TConcern extends AllConcerns,
-  TDeps extends AllConcerns | BuiltinEffects,
-  PConcern extends Exclude<TDeps, BuiltinEffects>,
-  PDeps extends AllConcerns | BuiltinEffects
->(
-  base: Implementation<TConcern, TDeps>,
-  provide: Implementation<PConcern, PDeps>
-): Implementation<TConcern, Exclude<TDeps, PConcern> | PDeps>;
-
 export interface ModuleRegistry<TConcerns extends AllConcerns> {
   get<T extends TConcerns>(concern: T): Concerns[TConcerns];
 }
