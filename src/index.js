@@ -298,7 +298,6 @@ const implementLogger = impl("logger");
 export {
   Await,
   ImplementationConstructor,
-  ModuleConstructor,
   Subscribe,
   addInterceptor,
   impl,
