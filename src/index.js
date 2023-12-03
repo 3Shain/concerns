@@ -36,7 +36,7 @@ function addInterceptor(interceptor) {
 function impl(concern) {
   return function (factory) {
     const mg = multishot(() => factory(Yield));
-    return {
+    return new ImplementationConstructor({
       concern,
       instantiate(context) {
         let handle = ([result, next]) => {
@@ -60,7 +60,7 @@ function impl(concern) {
         }
         return handle(interceptor(() => mg())(void 0));
       },
-    };
+    });
   };
 }
 function construct(inst) {
@@ -182,7 +182,7 @@ function constructAsyncStream(inst) {
     instance: w2(),
   };
 }
-function provide(base, provide2) {
+function provide(base, { base: provide2 }) {
   return {
     concern: base.concern,
     instantiate: (context) => {
@@ -265,7 +265,7 @@ class ImplementationConstructor {
         impl(concern)(function* () {
           const realImpl = yield* factory();
           const context = yield "(context)";
-          return yield* oneshot(realImpl.instantiate(context));
+          return yield* oneshot(realImpl.base.instantiate(context));
         })
       )
     );
@@ -283,7 +283,7 @@ class ImplementationConstructor {
     return constructAsyncStream(this.base);
   }
 }
-const __MODULE_IMPL__ = impl("__module__")(function* () {
+export const EmptyModule = impl("__module__")(function* () {
   const context = yield "(context)";
   return {
     context,
@@ -293,11 +293,7 @@ const __MODULE_IMPL__ = impl("__module__")(function* () {
     },
   };
 });
-class ModuleConstructor extends ImplementationConstructor {
-  constructor() {
-    super(__MODULE_IMPL__);
-  }
-}
+
 const implementLogger = impl("logger");
 export {
   Await,

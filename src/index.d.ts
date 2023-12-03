@@ -10,15 +10,7 @@ type AllConcerns = keyof Concerns;
 declare function use<TConcern extends AllConcerns>(
   concern: TConcern
 ): DetailOf<Concerns[TConcern], TConcern>;
-export type Implementation<
-  TConcern extends AllConcerns,
-  TDeps extends AllConcerns | BuiltinEffects
-> = {
-  concern: TConcern;
-  instantiate: (context: {
-    [key in Exclude<TDeps, BuiltinEffects>]: Concerns[key];
-  }) => MultishotGenerator<TDeps, Concerns[TConcern], any>;
-};
+
 export declare function addInterceptor<A, B, C>(
   interceptor: (
     normal: (value: C) => MultishotGenerator<A, B, C>
@@ -30,7 +22,7 @@ export declare function impl<TConcern extends AllConcerns>(
   factory: (
     _: typeof Yield<Concerns[TConcern]>
   ) => DetailOf<Concerns[TConcern], TDeps>
-) => Implementation<TConcern, TDeps>;
+) => ImplementationConstructor<TConcern, TDeps>;
 export interface Instance<T> {
   instance: T;
   dispose: () => void;
@@ -47,17 +39,15 @@ export interface ModuleRegistry<TConcerns extends AllConcerns> {
   get<T extends TConcerns>(concern: T): Concerns[TConcerns];
 }
 
-export class ImplementationConstructor<
+export interface ImplementationConstructor<
   TConcern extends AllConcerns,
   TDeps extends AllConcerns | BuiltinEffects
 > {
-  constructor(base: Implementation<TConcern, TDeps>);
-
   provide<
     PConcern extends Exclude<TDeps, BuiltinEffects>,
     PDeps extends AllConcerns | BuiltinEffects
   >(
-    provide: Implementation<PConcern, PDeps>
+    provide: ImplementationConstructor<PConcern, PDeps>
   ): ImplementationConstructor<TConcern, Exclude<TDeps, PConcern> | PDeps>;
 
   provideRegistry<RConcerns extends AllConcerns>(
@@ -75,7 +65,10 @@ export class ImplementationConstructor<
     DEffects extends AllConcerns | BuiltinEffects
   >(
     concern: PConcern,
-    factory: () => Generator<DEffects, Implementation<PConcern, PDeps>>
+    factory: () => Generator<
+      DEffects,
+      ImplementationConstructor<PConcern, PDeps>
+    >
   ): ImplementationConstructor<
     TConcern,
     Exclude<TDeps, PConcern> | PDeps | DEffects
@@ -97,17 +90,15 @@ export class ImplementationConstructor<
     : never;
 }
 
-export class ModuleConstructor<
-  TConcerns extends AllConcerns = never,
-  TDeps extends AllConcerns | BuiltinEffects = never
+export interface ModuleConstructor<
+  TConcerns extends AllConcerns,
+  TDeps extends AllConcerns | BuiltinEffects
 > {
-  constructor();
-
   provide<
     PConcern extends AllConcerns,
     PDeps extends AllConcerns | BuiltinEffects
   >(
-    provide: Implementation<PConcern, PDeps>
+    provide: ImplementationConstructor<PConcern, PDeps>
   ): ModuleConstructor<TConcerns | PConcern, Exclude<TDeps, PConcern> | PDeps>;
 
   provideRegistry<RConcerns extends AllConcerns>(
@@ -125,7 +116,10 @@ export class ModuleConstructor<
     DEffects extends AllConcerns | BuiltinEffects
   >(
     concern: PConcern,
-    factory: () => Generator<DEffects, Implementation<PConcern, PDeps>>
+    factory: () => Generator<
+      DEffects,
+      ImplementationConstructor<PConcern, PDeps>
+    >
   ): ModuleConstructor<
     TConcerns | PConcern,
     Exclude<TDeps, PConcern> | PDeps | DEffects
@@ -147,6 +141,8 @@ export class ModuleConstructor<
     : never;
 }
 
+export const EmptyModule: ModuleConstructor<never, never>;
+
 export interface Logger {
   log: (...args: any[]) => void;
   info: (...args: any[]) => void;
@@ -162,4 +158,4 @@ export declare const implementLogger: <
   factory: (
     _: (value: Logger) => DetailOf<void, "(yield)">
   ) => DetailOf<Logger, TDeps>
-) => Implementation<"logger", TDeps>;
+) => ImplementationConstructor<"logger", TDeps>;
