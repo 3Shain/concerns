@@ -104,7 +104,7 @@ function constructAsync(inst) {
       } else if (String(result.value) === "(await)") {
         return result.value.promise.then((val) => handle(next(val)));
       } else {
-        return Promise.reject(new Error("Unhandled effects"));
+        return Promise.reject(new Error("Unhandled effects or dependencies: " + String(result.value)));
       }
     }
   };
@@ -133,7 +133,7 @@ function constructStream(inst) {
         } else if (String(result.value) === "(yield)") {
           generator = next(yield result.value.value);
         } else {
-          throw new Error("Unhandled effects");
+          throw new Error("Unhandled effects or dependencies: " + String(result.value));
         }
       }
     }
@@ -166,7 +166,7 @@ function constructAsyncStream(inst) {
         } else if (String(result.value) === "(await)") {
           generator = next(await result.value.promise);
         } else {
-          throw new Error("Unhandled effects");
+          throw new Error("Unhandled effects or dependencies: " + String(result.value));
         }
       }
     }
